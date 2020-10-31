@@ -61,6 +61,7 @@ void *ticketselling1(void* temp)
             break;
         }
 	}
+    printf("Tickets have already been sold %d from seller1.\n",seller1);
 	return NULL;
 }
 
@@ -82,6 +83,7 @@ void *ticketselling2(void* temp)
             break;
         }
 	}
+    printf("Tickets have already been sold %d from seller2.\n",seller2);
 	return NULL;
 }
 
@@ -103,6 +105,7 @@ void *ticketselling3(void* temp)
             break;
         }
 	}
+    printf("Tickets have already been sold %d from seller3.\n",seller3);
 	return NULL;
 }
 
@@ -128,8 +131,5 @@ int main(void)
 
 	semctl(ticketreq,1,IPC_RMID);	//delete the signal,no need of the fourth parameter
 
-    printf("Tickets have already been sold %d from seller1.\n",seller1);
-    printf("Tickets have already been sold %d from seller2.\n",seller2);
-    printf("Tickets have already been sold %d from seller3.\n",seller3);
 	return 0;
 }

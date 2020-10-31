@@ -44,7 +44,7 @@ void V(int semid,int index)
 
 void *subpcalculator(void* temp)
 {
-	for(int i=1;i<=1000;i++)
+	for(int i=1;i<=100;i++)
 	{
 		a+=i;
 		if(a%2)
