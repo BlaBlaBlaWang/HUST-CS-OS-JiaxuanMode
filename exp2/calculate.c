@@ -97,9 +97,9 @@ int main(void)
 	
 	union semun arg;
 	arg.val=0;	//the fourth parameter is restricted by the standard,no need to specify its details
-	semctl(sem_odd_exist,1,SETVAL,arg);	//set the initial number of the signal equal to arg.val
-	semctl(sem_even_exist,1,SETVAL,arg);
-	semctl(sem_empty,1,SETVAL,arg); 
+	semctl(sem_odd_exist,0,SETVAL,arg);	//set the initial value of the signal equal to arg.val, mind the second parameter
+	semctl(sem_even_exist,0,SETVAL,arg);
+	semctl(sem_empty,0,SETVAL,arg); 
 
 	pthread_t pthread1,pthread3,pthread2;
 	pthread_create(&pthread1,NULL,subpoddprinter,NULL);	//set a new thread apart from this 'main thread',its procession is defined as subpoddprinter
