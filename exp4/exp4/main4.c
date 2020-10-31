@@ -111,7 +111,7 @@ void getlength(char *dir,int depth,char *fulldir){	//to get the longest numver l
 			if((templength=callength(tempstate.st_size))>length)
 				length=templength;
 
-			getlength(tempdirent->d_name,depth+4,relpath);
+			getlength(tempdirent->d_name,depth+4,fulldir);//这里之前似乎误把fulldir写作relpath
 
 		}else{
 
