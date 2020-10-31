@@ -101,14 +101,14 @@ int main(void)
 	semctl(sem_even_exist,1,SETVAL,arg);
 	semctl(sem_empty,1,SETVAL,arg);
 
-	pthread_t pthread1,pthread2,pthread3;
+	pthread_t pthread1,pthread3,pthread2;
 	pthread_create(&pthread1,NULL,subpoddprinter,NULL);	//set a new thread apart from this 'main thread',its procession is defined as subpoddprinter
-	pthread_create(&pthread2,NULL,subpcalculator,NULL);	//the first parameter is used to point to the id of this thread,the second is used to set the thread's properties 
-	pthread_create(&pthread3,NULL,subpevenprinter,NULL);
+	pthread_create(&pthread3,NULL,subpcalculator,NULL);	//the first parameter is used to point to the id of this thread,the second is used to set the thread's properties 
+	pthread_create(&pthread2,NULL,subpevenprinter,NULL);
 	
 	pthread_join(pthread1,NULL);	//the main thread suspends until other three processes are done
-	pthread_join(pthread2,NULL);
 	pthread_join(pthread3,NULL);
+	pthread_join(pthread2,NULL);
 
 	semctl(sem_odd_exist,1,IPC_RMID);	//delete the signal,no need of the fourth parameter
 	semctl(sem_even_exist,1,IPC_RMID);
