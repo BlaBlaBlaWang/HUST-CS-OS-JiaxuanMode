@@ -28,7 +28,7 @@ void sigintfunc(int signo)
 
 void child1kill(int sig_no)
 {
-	close(pipefd[1]);	//when child exits,first close its opening pipe file
+	close(pipefd[0]);	//when child exits,first close its opening pipe file
 	printf("\nChild Process 1 is Killed by Parent!\n");	
 	exit(0);
 }
@@ -44,12 +44,14 @@ void child1(int pipefdtemp)
 {
 	signal(SIGINT,SIG_IGN);	//used to ignore the keyborad interruption,or ctrl+c will end three processes
 	signal(SIGUSR1,child1kill);	//used to define the child1's exiting process
+	
+	char strings[100];
 	//process of child 1
-	for(int i=1;1;i++)
+	while(1)
 	{
-		sprintf(usrbuf,"I send you %4d times.",i);	//firstly translate formated string
-		write(pipefdtemp,usrbuf,23);	//secondly write the string to the pipe
-		sleep(1);	//pause for 1s
+		read(pipefdtemp,strings,23);	//read chokely from the pipe
+		printf("%s\n",strings);
+		//printf("Printing from child1\n");
 	}
 }
 
@@ -64,11 +66,13 @@ void child2(int pipefdtemp)
 	{
 		read(pipefdtemp,strings,23);	//read chokely from the pipe
 		printf("%s\n",strings);
+		//printf("Printing from child2\n");
 	}
 }
 
 int main(void)
 {
+	int x=1;
 	char choice=0;
 	do{
 		printf("Set upper limit of the information number?(y/n)");
@@ -92,8 +96,8 @@ int main(void)
 	PID1=fork();	//create child 1
 	if(PID1==0)
 	{
-		close(pipefd[0]);	//child 1 doesn't need the read end of the pipe
-		child1(pipefd[1]);	//child 1 writes to the pipe
+		close(pipefd[1]);	//child 1 doesn't need the write end of the pipe
+		child1(pipefd[0]);	//child 1 reads from the pipe
 	}
 	else
 	{
@@ -109,17 +113,17 @@ int main(void)
 
 	if(choice=='n')
 		while(1){
-			//打印相关的消息
-			sleep(1);
-			printf("1\n");
+			sprintf(usrbuf,"I send you %4d times.",x++);	//firstly translate formated string
+			write(pipefd[1],usrbuf,23);	//secondly write the string to the pipe
+			sleep(1);	//pause for 1s
 		}//parent loops until signal is received
 	else{
 		while(upperlimit-->0){
-			//打印相关的消息
-			sleep(1);
-			printf("1\n");
+			sprintf(usrbuf,"I send you %4d times.",x++);	//firstly translate formated string
+			write(pipefd[1],usrbuf,23);	//secondly write the string to the pipe
+			sleep(1);	//pause for 1s
 		}
-		sigintfunc(0);	//切腹自尽	
+		sigintfunc(0);//没有设置上限的话就切腹自尽	
 	}
 
 	return 0;
