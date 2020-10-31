@@ -14,6 +14,7 @@ void sigintfunc(int signo)
 	//kill children using kill to send user-defined signal
 	kill(PID1,SIGUSR1);
 	waitpid(PID1,&statepara,WUNTRACED);
+	//WUNTRACED表示不光返回终止子进程的信息，还返回因信号而停止的子进程的信息
 	kill(PID2,SIGUSR2);
 	waitpid(PID2,&statepara,WUNTRACED);
 	//wait for children to exit and recycle their resources
@@ -68,7 +69,20 @@ void child2(int pipefdtemp)
 
 int main(void)
 {
-	
+	char choice=0;
+	do{
+		printf("Set upper limit of the information number?(y/n)");
+		choice=getchar();
+		getchar();
+	}while(choice!='y'&&choice!='n');
+	printf("The choice is:%c\n",choice);
+
+	int upperlimit=0;
+	if(choice=='y'){
+		printf("Please type in the limit:");
+		scanf("%d",&upperlimit);
+	}
+
 	if(pipe(pipefd)<0)	//create 
 	{
 		printf("pipe creation error!\n");	//print the error of pipe creation
@@ -93,7 +107,20 @@ int main(void)
 
 	signal(SIGINT,sigintfunc);	//the parent process should change its signal handler after children are set
 
-	while(1);	//parent loops until signal is received
+	if(choice=='n')
+		while(1){
+			//打印相关的消息
+			sleep(1);
+			printf("1\n");
+		}//parent loops until signal is received
+	else{
+		while(upperlimit-->0){
+			//打印相关的消息
+			sleep(1);
+			printf("1\n");
+		}
+		sigintfunc(0);	//切腹自尽	
+	}
 
 	return 0;
 }
