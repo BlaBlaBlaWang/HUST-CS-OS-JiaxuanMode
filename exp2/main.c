@@ -19,7 +19,6 @@ union semun{
 #endif
 
 int sem_odd_exist,sem_even_exist,sem_empty;
-pthread_t p1,p2;
 int a,type;	//a is the common variable;type indicates whether the process is done
 
 void P(int semid,int index)
@@ -43,45 +42,46 @@ void V(int semid,int index)
 	return;
 }
 
-void *subp1(void* temp)
+void *subpcalculator(void* temp)
+{
+	for(int i=1;i<=1000;i++)
+	{
+		a+=i;
+		if(a%2)
+			V(sem_odd_exist,0);	//by this order,the subpoddprinter only prints after the adding process is done
+		else 
+			V(sem_even_exist,0);
+		P(sem_empty,0);	//the subpcalculator only loops until subpoddprinter already prints recent a
+	}
+	type=1;	//to inform the subpoddprinter/3 to exit
+	V(sem_odd_exist,0);	//in case that though subpcalculator finishes,subpoddprinter uses P function and goes into a deadlock
+	V(sem_even_exist,0);
+	return NULL;
+}
+
+void *subpoddprinter(void* temp)
 //the original shape of the thread's function is strictecd
 {
 	for(;;)
 	{
 		P(sem_odd_exist,0);
 		if(type==1)
-			break;	//before printing,confirm if the subp2 process has finished
-		printf("The value of a is %d.Odd.Printed by thread1.\n",a);
+			break;	//before printing,confirm if the subpcalculator process has finished
+		printf("The value of a is %d.Odd.Printed by subpoddprinter.\n",a);
 		V(sem_empty,0);
 	}
 	return NULL;
 }
 
-void *subp2(void* temp)
-{
-	for(int i=1;i<=1000;i++)
-	{
-		a+=i;
-		if(a%2)
-			V(sem_odd_exist,0);	//by this order,the subp1 only prints after the adding process is done
-		else 
-			V(sem_even_exist,0);
-		P(sem_empty,0);	//the subp2 only loops until subp1 already prints recent a
-	}
-	type=1;	//to inform the subp1/3 to exit
-	V(sem_odd_exist,0);	//in case that though subp2 finishes,subp1 uses P function and goes into a deadlock
-	V(sem_even_exist,0);
-	return NULL;
-}
 
-void *subp3(void* temp)
+void *subpevenprinter(void* temp)
 {
 	for(;;)
 	{
 		P(sem_even_exist,0);
 		if(type==1)
-			break;	//before printing,confirm if the subp2 process has finished
-		printf("The value of a is %d.Even.Printed by thread3.\n",a);
+			break;	//before printing,confirm if the subpcalculator process has finished
+		printf("The value of a is %d.Even.Printed by subpevenprinter.\n",a);
 		V(sem_empty,0);
 	}
 	return NULL;
@@ -102,11 +102,11 @@ int main(void)
 	semctl(sem_empty,1,SETVAL,arg);
 
 	pthread_t pthread1,pthread2,pthread3;
-	pthread_create(&pthread1,NULL,subp1,NULL);	//set a new thread apart from this 'main thread',its procession is defined as subp1
-	pthread_create(&pthread2,NULL,subp2,NULL);	//the first parameter is used to point to the id of this thread,the second is used to set the thread's properties 
-	pthread_create(&pthread3,NULL,subp3,NULL);
+	pthread_create(&pthread1,NULL,subpoddprinter,NULL);	//set a new thread apart from this 'main thread',its procession is defined as subpoddprinter
+	pthread_create(&pthread2,NULL,subpcalculator,NULL);	//the first parameter is used to point to the id of this thread,the second is used to set the thread's properties 
+	pthread_create(&pthread3,NULL,subpevenprinter,NULL);
 	
-	pthread_join(pthread1,NULL);	//the main thread suspends until other two processes are done
+	pthread_join(pthread1,NULL);	//the main thread suspends until other three processes are done
 	pthread_join(pthread2,NULL);
 	pthread_join(pthread3,NULL);
 
