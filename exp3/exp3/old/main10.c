@@ -31,6 +31,11 @@ int *sharedstate;
 char inputfilename[100];
 char outputfilename[100];
 
+int type=0,type2=0;
+int endpoint=-1;
+int endseg=-1;
+int iequalstozero=0;
+
 void P(int semid,int index)
 //the function itself creates a sembuf struct to define the demanded operation of the signal,and uses semop to operate the signal ofsemid
 //so the operation of the signal is wrapped into the call of function P or V
@@ -52,7 +57,7 @@ void V(int semid,int index)
 	return;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
 	int shmid[10];	//shared memory IDs
 	for(int i=0;i<10;i++)
@@ -64,6 +69,7 @@ int main(int argc, char *argv[])
 	sharedstateid=shmget(IPC_PRIVATE,20,IPC_CREAT|0666);	//allocate 10 byte for each shared memory segment
 	sharedstate=(int*)shmat(sharedstateid,NULL,0);		//this function is used to assosiate shared memory with process virtual memory address,the invital parameters are set as default	
 
+	/*
 	int* type=(int *)(sharedstate+0);
 	int* type2=(int *)(sharedstate+1);
 	int* endpoint=(int *)(sharedstate+2);
@@ -74,9 +80,7 @@ int main(int argc, char *argv[])
 	*endpoint=-1;
 	*endseg=-1;
 	*iequalstozero=0;
-
-	strcpy(inputfilename,argv[1]);
-	strcpy(outputfilename,argv[2]);
+	*/
 		
 	semid1=semget(IPC_PRIVATE,10,IPC_CREAT|S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);	//create a new system V signal set,the second parameter indicates the size of the set
 	semid2=semget(IPC_PRIVATE,10,IPC_CREAT|0666);
@@ -91,73 +95,70 @@ int main(int argc, char *argv[])
 	writebuf=fork();
 	if(writebuf==0)
 	{
-		
-		
 		FILE * destination=fopen(outputfilename,"wb+");
 
 		int i=0,tempseg=0;	//tempseg indicates the seg of shared memory being used,and i indicates the pointer's position inside the 10-byte seg
 		char tempchar=1;
+		int temppoint=0;
 
-		for(;*type2!=1;)
+		for(;type2!=1;)
 		{
 			P(semid1,tempseg%10);
 			
-			for(i=0;i<UNIT_SIZE&&!(*type==1&&tempseg%10==*endseg&&(i==*endpoint||(i==0&&*iequalstozero==1)));i++)
+			for(i=0;i<UNIT_SIZE&&!(type==1&&tempseg%10==endseg&&(i==endpoint||(i==0&&iequalstozero==1)));i++)
 			{
 				tempchar=*(sharedmemory[tempseg%10]+i);
 				fputc(tempchar,destination);
 			}
-			if(*type==1&&tempseg%10==*endseg&&(i==*endpoint||(i==0&&*iequalstozero==1)))
-                *type2=1;
-
+			if(type==1&&tempseg%10==endseg&&(i==endpoint||(i==0&&iequalstozero==1)))
+				type2=1;
 			V(semid2,(tempseg++)%10);	//after processing a seg,the signal and shm also points at the next,by modding it makes a loop
 		}
+		printf("endseg=%d,endpoint=%d",endseg,endpoint);
 
 		fclose(destination);
 		
-		printf("!type=%d,type2=%d,endpoint=%d,endseg=%d,iequalstozero=%d",*type,*type2,*endpoint,*endseg,*iequalstozero);
-
 		return 0;
 	}
 	else
 	{
-		readbuf=fork();
-		if(readbuf==0)
-		{
-			
-			FILE * source=fopen(inputfilename,"rb");
-
-			char tempchar=0;
-			int tempseg=0;
-			int temppoint=0;
-
-			do
+			readbuf=fork();
+			if(readbuf==0)
 			{
-				P(semid2,(tempseg)%10);	//the readbuf only continues until writebuf already writes recent data,but the first time is special,it can write independently for speed
+				FILE * source=fopen(inputfilename,"rb");
 
-				for(int i=0;i<UNIT_SIZE;i++)
-				{
-					if(feof(source))
-                    {   
-                        if(i==0)
-                            *iequalstozero=1;
-                        *endpoint=i-1;
-                        *endseg=(tempseg%10);
-                        break;
-                    }
-					tempchar=fgetc(source);
-					*(sharedmemory[tempseg%10]+i)=tempchar;
+		char tempchar=0;
+		int tempseg=0;
+		int temppoint=0;
+
+		do
+		{
+			P(semid2,(tempseg)%10);	//the readbuf only continues until writebuf already writes recent data,but the first time is special,it can write independently for speed
+
+			for(int i=0;i<UNIT_SIZE;i++)
+			{
+				if(feof(source))
+				{   
+					if(i==0)
+						iequalstozero=1;
+					endpoint=i-1;
+					endseg=(tempseg%10);
+					printf("endseg=%d!",endseg);
+					break;
 				}
+				tempchar=fgetc(source);
+				*(sharedmemory[tempseg%10]+i)=tempchar;
+				//printf("1");
+			}
 
-				V(semid1,(tempseg++)%10);	//by this order,the writebuf only reads after the reading process is done
-				
-			}while(!feof(source));	//the EOF is also written into the shm to inform the writebuf
+			V(semid1,(tempseg++)%10);	//by this order,the writebuf only reads after the reading process is done
+			
+		}while(!feof(source));	//the EOF is also written into the shm to inform the writebuf
 
-			*type=1;
-			fclose(source);
-						
-			printf("type=%d,type2=%d,endpoint=%d,endseg=%d,iequalstozero=%d",*type,*type2,*endpoint,*endseg,*iequalstozero);
-			return 0;
+		type=1;
+		fclose(source);
+					
+		return 0;
 		}
 	}
 	waitpid(0,&status,WUNTRACED);	//wait for all children processes to end

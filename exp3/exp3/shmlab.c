@@ -90,8 +90,6 @@ int main(int argc, char *argv[])
 	writebuf=fork();
 	if(writebuf==0)
 	{
-		
-		
 		FILE * destination=fopen(outputfilename,"wb+");
 
 		int i=0,tempseg=0;	//tempseg indicates the seg of shared memory being used,and i indicates the pointer's position inside the 10-byte seg
@@ -114,8 +112,7 @@ int main(int argc, char *argv[])
 
 		fclose(destination);
 		
-		printf("!type=%d,type2=%d,endpoint=%d,endseg=%d,iequalstozero=%d",*type,*type2,*endpoint,*endseg,*iequalstozero);
-
+		//printf("!type=%d,type2=%d,endpoint=%d,endseg=%d,iequalstozero=%d",*type,*type2,*endpoint,*endseg,*iequalstozero);
 		return 0;
 	}
 	else
@@ -155,7 +152,7 @@ int main(int argc, char *argv[])
 			*type=1;
 			fclose(source);
 						
-			printf("type=%d,type2=%d,endpoint=%d,endseg=%d,iequalstozero=%d",*type,*type2,*endpoint,*endseg,*iequalstozero);
+			//printf("type=%d,type2=%d,endpoint=%d,endseg=%d,iequalstozero=%d",*type,*type2,*endpoint,*endseg,*iequalstozero);
 			return 0;
 		}
 	}
