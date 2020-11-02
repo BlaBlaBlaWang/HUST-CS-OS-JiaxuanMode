@@ -15,6 +15,7 @@ using namespace std;
 //these are for length getting process
 int length=0;
 int templength;
+int roottime=1;
 char formatted[5];
 char goal[6]={'%',0,0,0,0,0};
 
@@ -72,7 +73,7 @@ void commonprint(struct stat tempstate,struct dirent*tempdirent){	//print the co
 	printf("%s ",groupNameFromId(tempstate.st_gid));	//print group name of the file's possession
 	printf("%s ",userNameFromId(tempstate.st_uid));	//print user name of the file's possession
 	printf(goal,tempstate.st_size);	//print size of the file
-	char * time=ctime((time_t*)&(tempstate.st_atime));	//get the time for the specified format
+	char * time=ctime((time_t*)&(tempstate.st_mtime));	//get the time for the specified format
 	int i=0;
 	while(*time!='\n')
 		if(i++>=4)	//skip week information like ls -l
@@ -138,9 +139,13 @@ void printdir(char *dir,int depth,char *fulldir){
 	//used for stack version
 	char relpath[80];
 	strcpy(relpath,fulldir);
-	strcat(relpath,"/");
-	strcat(relpath,dir);
-    printf("%s:\n",relpath);
+	if(!roottime)
+	{
+		strcat(relpath,"/");
+		strcat(relpath,dir);
+	}
+	printf("%s:\n",relpath);
+	roottime=0;
 	
     int wholesize=0;
 	if((dp=opendir(dir))==NULL){	//open the direction and get the dirent flow
@@ -195,9 +200,10 @@ void printdir(char *dir,int depth,char *fulldir){
 
 int main(void){
     char a[2]=".";
-    char b[5]="test";   //C++禁止字符常量转化为字符指针做实参
+    char b[80]="";   //C++禁止字符常量转化为字符指针做实参
 	
-    getlength(b,0,a);
+    getcwd(b,80);
+	getlength(b,0,a);
 	sprintf(formatted,"%dlu ",length);
 	strcat(goal,formatted);
 	//the ideal string for size printing is stored into the char array named goal
