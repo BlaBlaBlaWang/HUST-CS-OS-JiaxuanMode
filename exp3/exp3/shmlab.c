@@ -6,7 +6,7 @@
 #include<sys/shm.h>
 #include<wait.h>
 #include<string.h>
-#define UNIT_SIZE 100
+#define UNIT_SIZE 10000
 #ifndef SEMUN_H
 #define SEMUN_H
 #include<sys/types.h>
