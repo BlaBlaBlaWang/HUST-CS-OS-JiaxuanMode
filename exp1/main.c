@@ -9,6 +9,10 @@ int statepara,PID1,PID2;	//statepara is used for waitpid
 int pipefd[2];
 char usrbuf[23];	//used for sprintf's formated string translation
 
+int child1read=0;
+int child2read=0;
+int parentsend=0;
+
 void sigintfunc(int signo)
 {
 	//kill children using kill to send user-defined signal
@@ -21,6 +25,7 @@ void sigintfunc(int signo)
 	close(pipefd[0]);
 	close(pipefd[1]);
 	//close pipe for parent
+    printf("Parent sends %d messages in all.\n",parentsend);
 	printf("Parent Process is Killed!\n");
 	exit(0);
 	//parent exit
@@ -29,13 +34,15 @@ void sigintfunc(int signo)
 void child1kill(int sig_no)
 {
 	close(pipefd[0]);	//when child exits,first close its opening pipe file
-	printf("\nChild Process 1 is Killed by Parent!\n");	
+    printf("\nChild Process 1 receives %d messages in all.\n",child1read);	
+	printf("Child Process 1 is Killed by Parent!\n");
 	exit(0);
 }
 
 void child2kill(int sig_no)
 {
 	close(pipefd[0]);
+    printf("Child Process 2 receives %d messages in all.\n",child2read);	
 	printf("Child Process 2 is Killed by Parent!\n");
 	exit(0);
 }
@@ -51,6 +58,7 @@ void child1(int pipefdtemp)
 	{
 		read(pipefdtemp,strings,23);	//read chokely from the pipe
 		printf("%s\n",strings);
+        child1read++;
 		//printf("Printing from child1\n");
 	}
 }
@@ -66,6 +74,7 @@ void child2(int pipefdtemp)
 	{
 		read(pipefdtemp,strings,23);	//read chokely from the pipe
 		printf("%s\n",strings);
+        child2read++;
 		//printf("Printing from child2\n");
 	}
 }
@@ -115,13 +124,15 @@ int main(void)
 		while(1){
 			sprintf(usrbuf,"I send you %4d times.",x++);	//firstly translate formated string
 			write(pipefd[1],usrbuf,23);	//secondly write the string to the pipe
-			sleep(1);	//pause for 1s
+			parentsend++;
+            sleep(1);	//pause for 1s
 		}//parent loops until signal is received
 	else{
 		while(upperlimit-->0){
 			sprintf(usrbuf,"I send you %4d times.",x++);	//firstly translate formated string
 			write(pipefd[1],usrbuf,23);	//secondly write the string to the pipe
-			sleep(1);	//pause for 1s
+			parentsend++;
+            sleep(1);	//pause for 1s
 		}
 		sigintfunc(0);//没有设置上限的话就切腹自尽	
 	}
